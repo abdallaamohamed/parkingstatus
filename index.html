@@ -26,6 +26,49 @@
   }
 }
 
+    .container {
+      padding-top: 40px; /* Adjust spacing due to fixed header */
+    }
+
+    #map {
+      box-shadow: 0 4px 6px rgba(0,0,0,.1);
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: #333;
+      background-color: #f4f4f4;
+    }
+    header {
+      display: flex;
+      align-items: center; /* Vertically centers the contents within the header */
+      justify-content: center; /* Horizontally centers the header content */
+      padding: 10px 20px;
+      background-color: #fff;
+      box-shadow: 0 2px 15px rgba(0,0,0,.1);
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+    }
+
+
+    .logo-title-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      height: 50px; /* Adjust the logo size as needed */
+      margin-right: 10px; /* Space between logo and title */
+    }
+
+    .page-title {
+      font-weight: 600;
+      margin: 0; /* Removes default margin to fine-tune alignment */
+      font-size: 20px; /* Optional: Adjust title size */
+    }
+
 
     /* Futuristic design for polygons */
     .futuristic-polygon {
@@ -137,10 +180,14 @@
   </style>
 </head>
 <body>
-
+<header>
+  <div class="logo-title-wrapper">
+    <img src="https://www.clipartkey.com/mpngs/m/327-3277242_mcgp-twitter.png" alt="Logo" class="logo">
+    <h2 class="page-title">Parking Lot Status</h2>
+  </div>
+</header>
 <div class="container my-4">
-  <h2>Parking Lot Status</h2>
-  <div id="map"></div>
+<div id="map"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -148,9 +195,11 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
   var map = L.map('map').setView([40.28160388331038, -74.56828383111322], 16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© The Muslim Center of Greater Princeton'
+  L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+  //L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}'
+    maxZoom: 18,
+    attribution: '© The Muslim Center of Greater Princeton',
+    subdomains:['mt0','mt1','mt2','mt3']
   }).addTo(map);
 
   // Define parking lot areas as polygons
@@ -171,9 +220,9 @@
   };
 
   // Create polygons for each parking lot with the respective style and popup
-  L.polygon(masjidParkingCoords, openStyle).bindPopup('MCGP Parking: Occupied ').addTo(map);
-  L.polygon(mallParkingCoords, mediumStyle).bindPopup('Shopping Mall Parking: Congested').addTo(map);
-  L.polygon(creditUnionParkingCoords, fullStyle).bindPopup('Credit Union Parking: Available').addTo(map);
+  L.polygon(masjidParkingCoords, openStyle).bindPopup('MCGP Parking: Occupied <br><a href="https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675" target="_blank">Get Directions</a> ').addTo(map);
+  L.polygon(mallParkingCoords, mediumStyle).bindPopup('Shopping Mall: Congested <br><a href="https://www.google.com/maps/dir/?api=1&destination=40.280576078445456,-74.5711618360557" target="_blank">Get Directions</a> ').addTo(map);
+  L.polygon(creditUnionParkingCoords, fullStyle).bindPopup('PenFed: Available <br><a href="https://www.google.com/maps/dir/?api=1&destination=40.2821947507117,-74.56736818534861" target="_blank">Get Directions</a>').addTo(map);
 
 var statusBar = L.control({position: 'bottomright'});
 
