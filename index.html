@@ -71,27 +71,7 @@
 
 
     /* Futuristic design for polygons */
-    .futuristic-polygon {
-      stroke-width: 2px;
-      stroke-opacity: 0.9;
-      fill-opacity: 0.5;
-      transition: all 0.2s ease-in-out;
-    }
-    /* Open parking lot style */
-    .parking-lot-open {
-      fill: #4CAF50; /* Green for open */
-      stroke: #3e8e41;
-    }
-    /* Medium occupancy parking lot style */
-    .parking-lot-medium {
-      fill: #FFC107; /* Orange for medium */
-      stroke: #FF9800;
-    }
-    /* Full parking lot style */
-    .parking-lot-full {
-      fill: #F44336; /* Red for full */
-      stroke: #D32F2F;
-    }
+
 
     /* Popup styles */
     .leaflet-popup-content-wrapper {
@@ -194,6 +174,25 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
+
+
+const statusStyles = {
+  'Available': {
+    color: '#4CAF50', // Green
+    fillColor: '#4CAF50',
+    className: 'futuristic-polygon parking-lot-open',
+  },
+  'Medium': {
+    color: '#FFC107', // Orange
+    fillColor: '#FFC107',
+    className: 'futuristic-polygon parking-lot-medium',
+  },
+  'Full': {
+    color: '#F44336', // Red
+    fillColor: '#F44336',
+    className: 'futuristic-polygon parking-lot-full',
+  }
+};
   var map = L.map('map').setView([40.28160388331038, -74.56828383111322], 16);
   L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
   //L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}'
@@ -202,30 +201,11 @@
     subdomains:['mt0','mt1','mt2','mt3']
   }).addTo(map);
 
-  // Define parking lot areas as polygons
-  // Replace with the actual coordinates of your parking lots
-  var masjidParkingCoords = [[40.28296830367854, -74.57106187443675], [40.28347442162286, -74.57051488108465], [40.28305579774299, -74.56978261577635], [40.28254429238142, -74.57038783744821]];
-  var mallParkingCoords = [[40.280576078445456, -74.5711618360557], [40.280869886253384, -74.57051894721556], [40.27973397655169, -74.56966681625295], [40.279472552676424, -74.57023995771891]];
-  var creditUnionParkingCoords = [[40.2821947507117, -74.56736818534861], [40.28244137315549, -74.5666925595957], [40.2816128290199, -74.56633295234012], [40.28156017871496, -74.56729190502166]];
+  
+ 
+ 
 
- // Define the style for each parking status
-  var openStyle = {
-    className: 'futuristic-polygon parking-lot-full',
-  };
-  var mediumStyle = {
-    className: 'futuristic-polygon parking-lot-medium',
-  };
-  var fullStyle = {
-    className: 'futuristic-polygon parking-lot-open',
-  };
-
-  // Create polygons for each parking lot with the respective style and popup
-  L.polygon(masjidParkingCoords, openStyle).bindPopup('MCGP Parking: Occupied <br><a href="https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675" target="_blank">Get Directions</a> ').addTo(map);
-  L.polygon(mallParkingCoords, mediumStyle).bindPopup('Shopping Mall: Congested <br><a href="https://www.google.com/maps/dir/?api=1&destination=40.280576078445456,-74.5711618360557" target="_blank">Get Directions</a> ').addTo(map);
-  L.polygon(creditUnionParkingCoords, fullStyle).bindPopup('PenFed: Available <br><a href="https://www.google.com/maps/dir/?api=1&destination=40.2821947507117,-74.56736818534861" target="_blank">Get Directions</a>').addTo(map);
-
-var statusBar = L.control({position: 'bottomright'});
-
+ 
 
 
 
@@ -247,11 +227,11 @@ statusBar.onAdd = function (map) {
   div.innerHTML = `
     <div class="status-item">
       <span class="status-text">MCGP:</span>
-      ${createProgressBar('masjid-progress', 98, 100, 'red')}
+      ${createProgressBar('mcgp-parking-progress', 98, 100, 'red')}
     </div>
     <div class="status-item">
       <span class="status-text">Mall:</span>
-      ${createProgressBar('mall-progress', 60, 100, 'orange')}
+      ${createProgressBar('shopping-mall-progress', 60, 100, 'orange')}
     </div>
     <div class="status-item">
       <span class="status-text">PenFed:</span>
@@ -264,6 +244,77 @@ statusBar.onAdd = function (map) {
 
 // Add the status bar to the map
 statusBar.addTo(map);
+
+ 
+ 
+// Initialize parking lot polygons with placeholder styles
+var masjidParkingCoords = [[40.28296830367854, -74.57106187443675], [40.28347442162286, -74.57051488108465], [40.28305579774299, -74.56978261577635], [40.28254429238142, -74.57038783744821]];
+var mallParkingCoords = [[40.280576078445456, -74.5711618360557], [40.280869886253384, -74.57051894721556], [40.27973397655169, -74.56966681625295], [40.279472552676424, -74.57023995771891]];
+var creditUnionParkingCoords = [[40.2821947507117, -74.56736818534861], [40.28244137315549, -74.5666925595957], [40.2816128290199, -74.56633295234012], [40.28156017871496, -74.56729190502166]];
+
+var parkingLots = {
+  'MCGP Parking': L.polygon(masjidParkingCoords, {...statusStyles['Available'], weight: 2, opacity: 0.9, fillOpacity: 0.5}).bindPopup('Loading status...').addTo(map),
+  'Shopping Mall': L.polygon(mallParkingCoords, {...statusStyles['Medium'], weight: 2, opacity: 0.9, fillOpacity: 0.5}).bindPopup('Loading status...').addTo(map),
+  'Credit Union': L.polygon(creditUnionParkingCoords, {...statusStyles['Full'], weight: 2, opacity: 0.9, fillOpacity: 0.5}).bindPopup('Loading status...').addTo(map),
+};
+// Function to fetch parking lot statuses from Google Sheets
+async function fetchParkingLotStatuses() {
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const targetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqyVoYZOuNVVlm4S8xBsPyzxX58M6PlTmT4fYxR_qgtHAbKqdRG5zCuitX8uZd2vq3h_nvjo9WT2kq/pub?gid=712841837&single=true&output=csv'; // Replace with your actual Google Sheet CSV URL
+    const response = await fetch(proxyUrl + targetUrl);
+    const data = await response.text();
+    const lines = data.split('\n').slice(1); // Skip header line
+
+
+    const statusToProgress = {
+  'Available': {width: '100%', color: '#4CAF50'},
+  'Medium': {width: '50%', color: '#FFC107'},
+  'Full': {width: '100%', color: '#F44336'},
+};
+
+function updateProgressBar(parkingLot, statusText) {
+
+    
+  // Convert parking lot name to a format matching the progress bar's ID
+  const parkingLotId = parkingLot.replace(/\s+/g, '-').toLowerCase();
+  const progressBarId = `${parkingLotId}-progress`;
+  const progressBar = document.getElementById(progressBarId);
+
+  if (progressBar && statusToProgress[statusText]) {
+    const {width, color} = statusToProgress[statusText];
+    progressBar.style.width = width; // Ensure this sets the width correctly
+    progressBar.style.backgroundColor = color;
+  } else {
+    // Fallback or error handling if status is not recognized or progressBar is null
+    console.error('Progress bar or status not found for:', parkingLot);
+  }
+}
+
+lines.forEach(line => {
+    const [parkingLot, statusText] = line.split(',').map(item => item.trim());
+    const status = statusStyles[statusText] || statusStyles['Available']; // Fallback to 'Available' if status is not recognized
+
+    if (parkingLots[parkingLot]) {
+        const polygon = parkingLots[parkingLot];
+        polygon.setStyle({
+            color: status.color,
+            fillColor: status.fillColor,
+            weight: 2,
+            opacity: 0.9,
+            fillOpacity: 0.5
+        }); // Update polygon style based on status
+        polygon.bindPopup(`${parkingLot}: ${statusText}`).openPopup(); // Update popup content
+    }
+    // Update progress bar for each parking lot
+    updateProgressBar(parkingLot.replace(/\s+/g, '-').toLowerCase(), statusText);
+});
+}
+
+fetchParkingLotStatuses(); // Call the function to fetch and update statuses
+
+// Optionally, set an interval to regularly update statuses
+setInterval(fetchParkingLotStatuses, 300000); // Every 5 minutes
+ 
 
 </script>
 </body>
