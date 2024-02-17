@@ -69,7 +69,10 @@
       font-size: 20px; /* Optional: Adjust title size */
     }
 
-
+    .strong-blue-link {
+    color: #0000FF; /* Vivid blue color */
+    font-weight: bold; /* Optional: makes the link text bold */
+  }
     /* Futuristic design for polygons */
 
 
@@ -245,7 +248,11 @@ statusBar.onAdd = function (map) {
 // Add the status bar to the map
 statusBar.addTo(map);
 
- 
+ // Assuming you have centroids or fixed points for each parking lot
+const masjidDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675`;
+const mallDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=40.280576078445456,-74.5711618360557`;
+const creditUnionDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=40.2821947507117,-74.56736818534861`;
+
  
 // Initialize parking lot polygons with placeholder styles
 var masjidParkingCoords = [[40.28296830367854, -74.57106187443675], [40.28347442162286, -74.57051488108465], [40.28305579774299, -74.56978261577635], [40.28254429238142, -74.57038783744821]];
@@ -253,10 +260,37 @@ var mallParkingCoords = [[40.280576078445456, -74.5711618360557], [40.2808698862
 var creditUnionParkingCoords = [[40.2821947507117, -74.56736818534861], [40.28244137315549, -74.5666925595957], [40.2816128290199, -74.56633295234012], [40.28156017871496, -74.56729190502166]];
 
 var parkingLots = {
-  'MCGP Parking': L.polygon(masjidParkingCoords, {...statusStyles['Available'], weight: 2, opacity: 0.9, fillOpacity: 0.5}).bindPopup('Loading status...').addTo(map),
-  'Shopping Mall': L.polygon(mallParkingCoords, {...statusStyles['Medium'], weight: 2, opacity: 0.9, fillOpacity: 0.5}).bindPopup('Loading status...').addTo(map),
-  'Credit Union': L.polygon(creditUnionParkingCoords, {...statusStyles['Full'], weight: 2, opacity: 0.9, fillOpacity: 0.5}).bindPopup('Loading status...').addTo(map),
+    'MCGP Parking': L.polygon(masjidParkingCoords, {...statusStyles['Available'], weight: 2, opacity: 0.9, fillOpacity: 0.5})
+    .bindPopup(`<strong>MCGP Parking</strong><br>Initial status...<br><a href="https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675" target="_blank" rel="noopener noreferrer">Get Directions</a>`)
+    .addTo(map),
+  
+  'Shopping Mall': L.polygon(mallParkingCoords, {...statusStyles['Medium'], weight: 2, opacity: 0.9, fillOpacity: 0.5})
+    .bindPopup(`<strong>Shopping Mall</strong><br><a href="${mallDirectionsUrl}" target="_blank" rel="noopener noreferrer">Get Directions</a>`)
+    .addTo(map),
+
+  'Credit Union': L.polygon(creditUnionParkingCoords, {...statusStyles['Full'], weight: 2, opacity: 0.9, fillOpacity: 0.5})
+    .bindPopup(`<strong>Credit Union</strong><br><a href="${creditUnionDirectionsUrl}" target="_blank" rel="noopener noreferrer">Get Directions</a>`)
+    .addTo(map),
 };
+
+function updateParkingLotStatus(parkingLotName, newStatus) {
+    // Assuming directions URLs are stored or can be generated here
+    const directionsUrls = {
+        'MCGP Parking': 'https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675',
+        'Shopping Mall': 'https://www.google.com/maps/dir/?api=1&destination=40.280576078445456,-74.5711618360557',
+        'Credit Union': 'https://www.google.com/maps/dir/?api=1&destination=40.2821947507117,-74.56736818534861'
+    };
+
+    // Retrieve the corresponding directions URL
+    const directionsUrl = directionsUrls[parkingLotName];
+
+    // Ensure the parkingLotName matches the key used in your parkingLots object
+    const parkingLot = parkingLots[parkingLotName];
+    if (parkingLot) {
+        // Update the popup content to include both the new status and the directions URL
+        parkingLot.bindPopup(`<strong>${parkingLotName}</strong><br>${newStatus}<br><a href="${directionsUrl}" target="_blank" rel="noopener noreferrer">Get Directions</a>`);
+    }
+}
 // Function to fetch parking lot statuses from Google Sheets
 async function fetchParkingLotStatuses() {
     const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
@@ -292,7 +326,16 @@ function updateProgressBar(parkingLot, statusText) {
 
 lines.forEach(line => {
     const [parkingLot, statusText] = line.split(',').map(item => item.trim());
+
+    // Define the directions URLs inside or make them accessible to this scope
+    const directionsUrls = {
+        'MCGP Parking': 'https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675',
+        'Shopping Mall': 'https://www.google.com/maps/dir/?api=1&destination=40.280576078445456,-74.5711618360557',
+        'Credit Union': 'https://www.google.com/maps/dir/?api=1&destination=40.2821947507117,-74.56736818534861'
+    };
+
     const status = statusStyles[statusText] || statusStyles['Available']; // Fallback to 'Available' if status is not recognized
+    const directionsUrl = directionsUrls[parkingLot];
 
     if (parkingLots[parkingLot]) {
         const polygon = parkingLots[parkingLot];
@@ -303,7 +346,10 @@ lines.forEach(line => {
             opacity: 0.9,
             fillOpacity: 0.5
         }); // Update polygon style based on status
-        polygon.bindPopup(`${parkingLot}: ${statusText}`).openPopup(); // Update popup content
+
+        // Update the popup content to include both the status and the directions URL
+        const popupContent = `<strong>${parkingLot}</strong><br>${statusText}<br><a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" class="strong-blue-link">Get Directions</a>`;
+        polygon.bindPopup(popupContent).openPopup(); // Update popup content
     }
     // Update progress bar for each parking lot
     updateProgressBar(parkingLot.replace(/\s+/g, '-').toLowerCase(), statusText);
