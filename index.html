@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet" />
+  <title>Parking Lot Status</title>
+  <style>
+
+#map {
+  width: 100%; /* Full width to ensure it fills the container */
+  height: 60vh; /* Adjust based on the viewport height to ensure it fits well on the screen */
+  margin-bottom: 20px; /* Optional: Adds some space below the map */
+}
+
+@media (max-width: 768px) { /* For smaller devices */
+  #map {
+    height: 50vh; /* You might want to adjust the height for smaller screens */
+  }
+}
+
+@media (max-width: 480px) { /* For very small devices like phones in portrait mode */
+  #map {
+    height: 40vh; /* Further reduce height to accommodate other page elements */
+  }
+}
+
+
+    /* Futuristic design for polygons */
+    .futuristic-polygon {
+      stroke-width: 2px;
+      stroke-opacity: 0.9;
+      fill-opacity: 0.5;
+      transition: all 0.2s ease-in-out;
+    }
+    /* Open parking lot style */
+    .parking-lot-open {
+      fill: #4CAF50; /* Green for open */
+      stroke: #3e8e41;
+    }
+    /* Medium occupancy parking lot style */
+    .parking-lot-medium {
+      fill: #FFC107; /* Orange for medium */
+      stroke: #FF9800;
+    }
+    /* Full parking lot style */
+    .parking-lot-full {
+      fill: #F44336; /* Red for full */
+      stroke: #D32F2F;
+    }
+
+    /* Popup styles */
+    .leaflet-popup-content-wrapper {
+      background: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
+      color: #fff; /* White text */
+      border-radius: 12px; /* Rounded corners */
+      line-height: 1.4;
+      font-size: 14px;
+      text-align: center;
+    }
+    .leaflet-popup-tip {
+      background: rgba(0, 0, 0, 0.6);
+    }
+    
+    /* Style for the status bar at the bottom right */
+.leaflet-bottom.leaflet-right {
+  pointer-events: none;
+}
+.status-bar {
+  background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background for futuristic look */
+  color: #fff; /* White text color for readability */
+        border-radius: 5px; /* Smoothed corners */
+
+  font-family:    "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; /* Modern font */
+  padding: 10px; /* Adequate padding for content */
+  margin: 0; /* Reset margin */
+  pointer-events: auto; /* Enable interactions */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+  width: 90%; /* Auto width based on content */
+  max-width: 90%; /* Max width to prevent overflow */
+  bottom: 10px; /* Positioning from the bottom */
+  right: -2px; /* Positioning from the right */
+  position: absolute; /* Absolute positioning to float over the map */
+  z-index: 1000; /* Ensure it's above map layers */
+}
+
+.status-item {
+ /* display: flex; */
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.status-indicator {
+  height: 10px;
+  width: 20px;
+  display: inline-block;
+  border-radius: 50%;
+}
+.status-text {
+  margin-left: 5px;
+  font-size: 14px;
+  display: inline;
+}
+
+  .progress-container {
+      background: rgba(255, 255, 255, 0.2); /* Lighter background for visibility */
+      box-shadow: inset 0 2px 9px rgba(255, 255, 255, 0.3), /* Inner white glow */
+                  inset 0 -2px 6px rgba(0, 0, 0, 0.3); /* Inner shadow for depth */
+      border: 1px solid rgba(255, 255, 255, 0.4); /* subtle border for 3D effect */
+      margin-top: 2px; /* Space from text */
+      position: relative; /* Needed for pseudo-elements */
+            border-radius: 5px; /* Smoothed corners */
+
+    }
+
+    .progress-bar {
+      position: relative; /* Needed for pseudo-elements */
+      height: 10px; /* Increased height for a bolder bar */
+      border-radius: 5px; /* Smoothed corners */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Outer shadow for 3D effect */
+      overflow: hidden; /* Ensures inner shadows/glow don't spill out */
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to top, rgba(255, 255, 255, 0.2), transparent); /* Glossy effect */
+      pointer-events: none; /* Ensure clicks pass through */
+    }
+
+    /* Glow effect on hover */
+    .progress-container:hover .progress-bar {
+      box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.6);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container my-4">
+  <h2>Parking Lot Status</h2>
+  <div id="map"></div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+  var map = L.map('map').setView([40.28160388331038, -74.56828383111322], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© The Muslim Center of Greater Princeton'
+  }).addTo(map);
+
+  // Define parking lot areas as polygons
+  // Replace with the actual coordinates of your parking lots
+  var masjidParkingCoords = [[40.28296830367854, -74.57106187443675], [40.28347442162286, -74.57051488108465], [40.28305579774299, -74.56978261577635], [40.28254429238142, -74.57038783744821]];
+  var mallParkingCoords = [[40.280576078445456, -74.5711618360557], [40.280869886253384, -74.57051894721556], [40.27973397655169, -74.56966681625295], [40.279472552676424, -74.57023995771891]];
+  var creditUnionParkingCoords = [[40.2821947507117, -74.56736818534861], [40.28244137315549, -74.5666925595957], [40.2816128290199, -74.56633295234012], [40.28156017871496, -74.56729190502166]];
+
+ // Define the style for each parking status
+  var openStyle = {
+    className: 'futuristic-polygon parking-lot-full',
+  };
+  var mediumStyle = {
+    className: 'futuristic-polygon parking-lot-medium',
+  };
+  var fullStyle = {
+    className: 'futuristic-polygon parking-lot-open',
+  };
+
+  // Create polygons for each parking lot with the respective style and popup
+  L.polygon(masjidParkingCoords, openStyle).bindPopup('MCGP Parking: Occupied ').addTo(map);
+  L.polygon(mallParkingCoords, mediumStyle).bindPopup('Shopping Mall Parking: Congested').addTo(map);
+  L.polygon(creditUnionParkingCoords, fullStyle).bindPopup('Credit Union Parking: Available').addTo(map);
+
+var statusBar = L.control({position: 'bottomright'});
+
+
+
+
+// Create a custom control for the status bar with progress bars
+var statusBar = L.control({position: 'bottomright'});
+
+statusBar.onAdd = function (map) {
+  var div = L.DomUtil.create('div', 'status-bar');
+  
+  // Function to create progress bar HTML
+  function createProgressBar(id, value, max, color) {
+    return `
+      <div class="progress-container">
+        <div id="${id}" class="progress-bar" style="width: ${value/max*100}%; background-color: ${color};"></div>
+      </div>
+    `;
+  }
+  
+  div.innerHTML = `
+    <div class="status-item">
+      <span class="status-text">MCGP:</span>
+      ${createProgressBar('masjid-progress', 98, 100, 'red')}
+    </div>
+    <div class="status-item">
+      <span class="status-text">Mall:</span>
+      ${createProgressBar('mall-progress', 60, 100, 'orange')}
+    </div>
+    <div class="status-item">
+      <span class="status-text">PenFed:</span>
+      ${createProgressBar('credit-union-progress', 15, 100, 'green')}
+    </div>
+  `;
+  
+  return div;
+};
+
+// Add the status bar to the map
+statusBar.addTo(map);
+
+</script>
+</body>
+</html>
