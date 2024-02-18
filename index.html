@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet" />
-  <title>Parking Lot Status</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <title>MCGP SpotNavigator</title>
   <style>
 
 #map {
@@ -27,7 +28,7 @@
 }
 
     .container {
-      padding-top: 40px; /* Adjust spacing due to fixed header */
+      padding-top: 60px; /* Adjust spacing due to fixed header */
     }
 
     #map {
@@ -44,12 +45,18 @@
       align-items: center; /* Vertically centers the contents within the header */
       justify-content: center; /* Horizontally centers the header content */
       padding: 10px 20px;
-      background-color: #fff;
+      background-color: #ffffff;
+opacity: 0.8;
+background-size: 10px 10px;
+background-image: repeating-linear-gradient(45deg, #F7EAD9 0, #F7EAD9 1px, #ffffff 0, #ffffff 50%);
+
       box-shadow: 0 2px 15px rgba(0,0,0,.1);
       position: fixed;
       width: 100%;
       top: 0;
       z-index: 1000;
+
+      
     }
 
 
@@ -59,18 +66,18 @@
     }
 
     .logo {
-      height: 50px; /* Adjust the logo size as needed */
+      height: 100px; /* Adjust the logo size as needed */
       margin-right: 10px; /* Space between logo and title */
     }
 
     .page-title {
-      font-weight: 600;
-      margin: 0; /* Removes default margin to fine-tune alignment */
-      font-size: 20px; /* Optional: Adjust title size */
+           font-family: system-ui;
+            font-size: 30px; /* Adjusted font size */
+            color: #818f55  ; /* Dark grey for strong contrast */
     }
 
     .strong-blue-link {
-    color: #0000FF; /* Vivid blue color */
+    color: #e6e6e9; /* Vivid blue color */
     font-weight: bold; /* Optional: makes the link text bold */
   }
     /* Futuristic design for polygons */
@@ -78,7 +85,7 @@
 
     /* Popup styles */
     .leaflet-popup-content-wrapper {
-      background: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
+      background: rgba(0, 0, 0, 0.9); /* Semi-transparent dark background */
       color: #fff; /* White text */
       border-radius: 12px; /* Rounded corners */
       line-height: 1.4;
@@ -165,8 +172,8 @@
 <body>
 <header>
   <div class="logo-title-wrapper">
-    <img src="https://www.clipartkey.com/mpngs/m/327-3277242_mcgp-twitter.png" alt="Logo" class="logo">
-    <h2 class="page-title">Parking Lot Status</h2>
+    <img src="https://i.ibb.co/tBff8J0/MCGP-Logo-Green.png" alt="Logo" class="logo">
+    <h2 class="page-title">SpotNavigator</h2>
   </div>
 </header>
 <div class="container my-4">
