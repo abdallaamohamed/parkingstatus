@@ -7,7 +7,7 @@
   <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Montserrat:wght@700&display=swap" rel="stylesheet">
   <title>MCGP SpotNavigator</title>
-  <style>
+ <style>
 
 #map {
   width: 100%; /* Full width to ensure it fills the container */
@@ -55,25 +55,29 @@ background-image: repeating-linear-gradient(45deg, #F7EAD9 0, #F7EAD9 1px, #ffff
       width: 100%;
       top: 0;
       z-index: 1000;
-
+justify-content: flex-start;
       
     }
 
 
-    .logo-title-wrapper {
-      display: flex;
-      align-items: center;
-    }
+.logo-title-wrapper {
+  display: flex;
+  flex-direction: column; /* Stack logo and title vertically */
+  align-items: center; /* Center-align the items vertically */
+  justify-content: center; /* Center-align the items horizontally */
+}
 
+ 
     .logo {
       height: 100px; /* Adjust the logo size as needed */
       margin-right: 10px; /* Space between logo and title */
     }
 
     .page-title {
-           font-family: system-ui;
-            font-size: 30px; /* Adjusted font size */
+           font-family: Calibri;
+            font-size: 16px; /* Adjusted font size */
             color: #818f55  ; /* Dark grey for strong contrast */
+             margin-top: -20px; 
     }
 
     .strong-blue-link {
@@ -110,11 +114,11 @@ background-image: repeating-linear-gradient(45deg, #F7EAD9 0, #F7EAD9 1px, #ffff
   margin: 0; /* Reset margin */
   pointer-events: auto; /* Enable interactions */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Shadow for depth */
-  width: 90%; /* Auto width based on content */
+  width: 200px; /* Auto width based on content */
   max-width: 90%; /* Max width to prevent overflow */
-  bottom: 10px; /* Positioning from the bottom */
-  right: -2px; /* Positioning from the right */
-  position: absolute; /* Absolute positioning to float over the map */
+  top: 10px; /* Positioning from the bottom */
+  right: 1px; /* Positioning from the right */
+  position: fixed; /* Absolute positioning to float over the map */
   z-index: 1000; /* Ensure it's above map layers */
 }
 
@@ -167,208 +171,201 @@ background-image: repeating-linear-gradient(45deg, #F7EAD9 0, #F7EAD9 1px, #ffff
     .progress-container:hover .progress-bar {
       box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.6);
     }
+    
+      .polygon-label {
+    background-color: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    font-size: 12px;
+    padding: 2px 5px;
+  }
+  
+  @keyframes flashAnimation {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; } /* Adjust opacity level for better visibility if needed */
+}
+
+.futuristic-polygon-flashing .futuristic-polygon{
+  animation: flashAnimation 1.5s infinite; /* Adjust timing as needed */
+}
+
+
+@keyframes glowAnimation {
+  0%, 70% {
+    fill-opacity: 0.7; /* Non-glowing state maintains 70% opacity */
+    stroke-opacity: 0.7; /* Apply this to the border if desired */
+  }
+  50% {
+    fill-opacity: 1; /* Glowing state - more opaque or brighter */
+    stroke-opacity: 1; /* Apply this to the border if desired */
+  }
+}
+
+.futuristic-polygon-glowing {
+  animation: glowAnimation 2s infinite ease-in-out; /* Smooth glowing effect */
+}
+
   </style>
 </head>
 <body>
 <header>
   <div class="logo-title-wrapper">
     <img src="https://i.ibb.co/tBff8J0/MCGP-Logo-Green.png" alt="Logo" class="logo">
-    <h2 class="page-title">SpotNavigator</h2>
+    <div class="title-container">
+      <h2 class="page-title">SpotNavigator</h2>
+    </div>
   </div>
 </header>
-<div class="container my-4">
-<div id="map"></div>
+<div class="container-xxl	 my-4">
+  <div id="map"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
+  // Define styles based on availability status
+  const statusStyles = {
+    'Available': { color: '#4CAF50', fillColor: '#4CAF50', className: 'futuristic-polygon futuristic-polygon-glowing parking-lot-open' },
+    'Medium': { color: '#FFC107', fillColor: '#FFC107', className: 'futuristic-polygon futuristic-polygon-glowing parking-lot-medium' },
+    'Full': { color: '#F44336', fillColor: '#F44336', className: 'futuristic-polygon futuristic-polygon-glowing parking-lot-full' }
+  };
 
-
-const statusStyles = {
-  'Available': {
-    color: '#4CAF50', // Green
-    fillColor: '#4CAF50',
-    className: 'futuristic-polygon parking-lot-open',
-  },
-  'Medium': {
-    color: '#FFC107', // Orange
-    fillColor: '#FFC107',
-    className: 'futuristic-polygon parking-lot-medium',
-  },
-  'Full': {
-    color: '#F44336', // Red
-    fillColor: '#F44336',
-    className: 'futuristic-polygon parking-lot-full',
-  }
-};
-  var map = L.map('map').setView([40.28160388331038, -74.56828383111322], 16);
-  L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-  //L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}'
-    maxZoom: 18,
-    attribution: '© The Muslim Center of Greater Princeton',
-    subdomains:['mt0','mt1','mt2','mt3']
+  // Initialize the map
+  const map = L.map('map').setView([40.28353806142166, -74.56733158225573], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 15,
+    attribution: 'The Muslim Center of Greater Princeton',
+    subdomains: ['a', 'b', 'c'],
+      scrollWheelZoom: false,
+      zoomControl: false
   }).addTo(map);
+map.removeControl(map.zoomControl);
 
-  
- 
- 
-
- 
-
-
-
-// Create a custom control for the status bar with progress bars
-var statusBar = L.control({position: 'bottomright'});
-
-statusBar.onAdd = function (map) {
-  var div = L.DomUtil.create('div', 'status-bar');
-  
-  // Function to create progress bar HTML
-  function createProgressBar(id, value, max, color) {
-    return `
-      <div class="progress-container">
-        <div id="${id}" class="progress-bar" style="width: ${value/max*100}%; background-color: ${color};"></div>
+  // Add custom control for the status bar
+  const statusBar = L.control({ position: 'topright' });
+  statusBar.onAdd = function(map) {
+    const div = L.DomUtil.create('div', 'status-bar');
+    div.innerHTML = `
+      <div class="status-item">
+        <span class="status-text">MCGP:</span>
+        <div class="progress-container"><div id="mcgp-parking-progress" class="progress-bar" style="width: 98%; background-color: red;"></div></div>
+      </div>
+      <div class="status-item">
+        <span class="status-text">Mall:</span>
+        <div class="progress-container"><div id="shopping-mall-progress" class="progress-bar" style="width: 60%; background-color: orange;"></div></div>
+      </div>
+      <div class="status-item">
+        <span class="status-text">379 Campus:</span>
+        <div class="progress-container"><div id="379-progress" class="progress-bar" style="width: 15%; background-color: green;"></div></div>
       </div>
     `;
-  }
-  
-  div.innerHTML = `
-    <div class="status-item">
-      <span class="status-text">MCGP:</span>
-      ${createProgressBar('mcgp-parking-progress', 98, 100, 'red')}
-    </div>
-    <div class="status-item">
-      <span class="status-text">Mall:</span>
-      ${createProgressBar('shopping-mall-progress', 60, 100, 'orange')}
-    </div>
-    <div class="status-item">
-      <span class="status-text">PenFed:</span>
-      ${createProgressBar('credit-union-progress', 15, 100, 'green')}
-    </div>
-  `;
-  
-  return div;
-};
+    return div;
+  };
+  statusBar.addTo(map);
 
-// Add the status bar to the map
-statusBar.addTo(map);
+  // Parking lot polygons and popups
+  const parkingLotConfigs = [
+    { name: 'MCGP Parking', coords: [[40.28296830367854, -74.57106187443675], [40.28347442162286, -74.57051488108465], [40.28305579774299, -74.56978261577635], [40.28254429238142, -74.57038783744821]], status: 'Available' },
+    { name: 'Shopping Mall', coords: [[40.280576078445456, -74.5711618360557], [40.280869886253384, -74.57051894721556], [40.27973397655169, -74.56966681625295], [40.279472552676424, -74.57023995771891]], status: 'Medium' },
+    { name: '379', coords: [[40.28680911890951, -74.5682419795982], [40.28724932822151, -74.56781804372265], [40.28673462166537, -74.56679926588559], [40.286319805963615, -74.56724761691629]], status: 'Full' }
+  ];
 
- // Assuming you have centroids or fixed points for each parking lot
-const masjidDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675`;
-const mallDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=40.280576078445456,-74.5711618360557`;
-const creditUnionDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=40.2821947507117,-74.56736818534861`;
+  const parkingLots = {};
+  parkingLotConfigs.forEach(({ name, coords, status }) => {
+    parkingLots[name] = L.polygon(coords, { ...statusStyles[status], weight: 2, opacity: 0.9, fillOpacity: 0.5 })
+      .bindPopup(`<strong>${name}</strong><br>Initial status...<br><a href="https://www.google.com/maps/dir/?api=1&destination=${coords[0].join(',')}" target="_blank" rel="noopener noreferrer">Get Directions</a>`)
+      .addTo(map);
+  });
 
- 
-// Initialize parking lot polygons with placeholder styles
-var masjidParkingCoords = [[40.28296830367854, -74.57106187443675], [40.28347442162286, -74.57051488108465], [40.28305579774299, -74.56978261577635], [40.28254429238142, -74.57038783744821]];
-var mallParkingCoords = [[40.280576078445456, -74.5711618360557], [40.280869886253384, -74.57051894721556], [40.27973397655169, -74.56966681625295], [40.279472552676424, -74.57023995771891]];
-var creditUnionParkingCoords = [[40.2821947507117, -74.56736818534861], [40.28244137315549, -74.5666925595957], [40.2816128290199, -74.56633295234012], [40.28156017871496, -74.56729190502166]];
 
-var parkingLots = {
-    'MCGP Parking': L.polygon(masjidParkingCoords, {...statusStyles['Available'], weight: 2, opacity: 0.9, fillOpacity: 0.5})
-    .bindPopup(`<strong>MCGP Parking</strong><br>Initial status...<br><a href="https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675" target="_blank" rel="noopener noreferrer">Get Directions</a>`)
-    .addTo(map),
-  
-  'Shopping Mall': L.polygon(mallParkingCoords, {...statusStyles['Medium'], weight: 2, opacity: 0.9, fillOpacity: 0.5})
-    .bindPopup(`<strong>Shopping Mall</strong><br><a href="${mallDirectionsUrl}" target="_blank" rel="noopener noreferrer">Get Directions</a>`)
-    .addTo(map),
 
-  'Credit Union': L.polygon(creditUnionParkingCoords, {...statusStyles['Full'], weight: 2, opacity: 0.9, fillOpacity: 0.5})
-    .bindPopup(`<strong>Credit Union</strong><br><a href="${creditUnionDirectionsUrl}" target="_blank" rel="noopener noreferrer">Get Directions</a>`)
-    .addTo(map),
-};
-
-function updateParkingLotStatus(parkingLotName, newStatus) {
-    // Assuming directions URLs are stored or can be generated here
-    const directionsUrls = {
-        'MCGP Parking': 'https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675',
-        'Shopping Mall': 'https://www.google.com/maps/dir/?api=1&destination=40.280576078445456,-74.5711618360557',
-        'Credit Union': 'https://www.google.com/maps/dir/?api=1&destination=40.2821947507117,-74.56736818534861'
-    };
-
-    // Retrieve the corresponding directions URL
-    const directionsUrl = directionsUrls[parkingLotName];
-
-    // Ensure the parkingLotName matches the key used in your parkingLots object
+  // Fetch and update parking lot statuses
+ // Fetch and update parking lot statuses
+async function fetchAndUpdateParkingLotStatuses() {
+  const response = await fetch('https://macgpsahifa.net/spotnav/mcgpparkingstatus.csv');
+  const data = await response.text();
+  const lines = data.split('\n').slice(1); // Skip header
+console.log(data)
+  lines.forEach(line => {
+    const [parkingLotName, statusText] = line.split(',').map(item => item.trim());
     const parkingLot = parkingLots[parkingLotName];
     if (parkingLot) {
-        // Update the popup content to include both the new status and the directions URL
-        parkingLot.bindPopup(`<strong>${parkingLotName}</strong><br>${newStatus}<br><a href="${directionsUrl}" target="_blank" rel="noopener noreferrer">Get Directions</a>`);
+      const status = statusStyles[statusText] || statusStyles['Available']; // Fallback to 'Available'
+      parkingLot.setStyle(status);
+
+      // Correctly accessing the first point of the polygon for the Google Maps URL
+      const firstPoint = parkingLot.getLatLngs()[0][0];
+      const latLng = `${firstPoint.lat},${firstPoint.lng}`;
+
+      parkingLot.bindPopup(`<strong>${parkingLotName}</strong><br>${statusText}<br><a href="https://www.google.com/maps/dir/?api=1&destination=${latLng}" target="_blank" rel="noopener noreferrer">Get Directions</a>`);
+
+      // Update progress bar to reflect the new status
+      updateProgressBar(parkingLotName, statusText);
     }
+  });
 }
-// Function to fetch parking lot statuses from Google Sheets
-async function fetchParkingLotStatuses() {
-    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    const targetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqyVoYZOuNVVlm4S8xBsPyzxX58M6PlTmT4fYxR_qgtHAbKqdRG5zCuitX8uZd2vq3h_nvjo9WT2kq/pub?gid=712841837&single=true&output=csv'; // Replace with your actual Google Sheet CSV URL
-    const response = await fetch(proxyUrl + targetUrl);
-    const data = await response.text();
-    const lines = data.split('\n').slice(1); // Skip header line
+
+// Assuming this is where you define your 'MCGP Parking' polygon
+const masjidParkingCoords = [[40.28296830367854, -74.57106187443675], [40.28347442162286, -74.57051488108465], [40.28305579774299, -74.56978261577635], [40.28254429238142, -74.57038783744821]];
+
+// Create the polygon and add it to the map
+const mcgpParkingPolygon = L.polygon(masjidParkingCoords, { ...statusStyles[status], weight: 2, opacity: 0.0, fillOpacity: 0.0 })
+    .addTo(map);
+
+// Bind a permanent tooltip to the polygon
+mcgpParkingPolygon.bindTooltip("MCGP", {
+    permanent: true,
+    direction: 'top',
+    className: 'polygon-label', // Optional: for custom styling
+        offset: [0, -20]
+}).openTooltip();
+
+// The rest of your code for handling polygons
 
 
-    const statusToProgress = {
-  'Available': {width: '100%', color: '#4CAF50'},
-  'Medium': {width: '50%', color: '#FFC107'},
-  'Full': {width: '100%', color: '#F44336'},
+function updateProgressBar(parkingLotName, statusText) {
+  const progressBarIdMap = {
+    'MCGP Parking': 'mcgp-parking-progress',
+    'Shopping Mall': 'shopping-mall-progress',
+    '379': '379-progress'
+  };
+
+const statusToProgress = {
+  'Available': { width: '100%', color: '#4CAF50' },
+  'Medium': { width: '50%', color: '#FFC107' },
+  'Full': { width: '100%', color: '#F44336' }, // Corrected for logical consistency
+  'Low': { width: '20%', color: '#4CAF50' } // Assuming "Low" means low availability
 };
 
-function updateProgressBar(parkingLot, statusText) {
-
-    
-  // Convert parking lot name to a format matching the progress bar's ID
-  const parkingLotId = parkingLot.replace(/\s+/g, '-').toLowerCase();
-  const progressBarId = `${parkingLotId}-progress`;
-  const progressBar = document.getElementById(progressBarId);
-
-  if (progressBar && statusToProgress[statusText]) {
-    const {width, color} = statusToProgress[statusText];
-    progressBar.style.width = width; // Ensure this sets the width correctly
-    progressBar.style.backgroundColor = color;
-  } else {
-    // Fallback or error handling if status is not recognized or progressBar is null
-    console.error('Progress bar or status not found for:', parkingLot);
+  const progressBarId = progressBarIdMap[parkingLotName];
+  if (progressBarId && statusToProgress[statusText]) {
+    const progressBar = document.getElementById(progressBarId);
+    if (progressBar) {
+      const { width, color } = statusToProgress[statusText];
+      progressBar.style.width = width;
+      progressBar.style.backgroundColor = color;
+    }
   }
 }
 
-lines.forEach(line => {
-    const [parkingLot, statusText] = line.split(',').map(item => item.trim());
-
-    // Define the directions URLs inside or make them accessible to this scope
-    const directionsUrls = {
-        'MCGP Parking': 'https://www.google.com/maps/dir/?api=1&destination=40.28296830367854,-74.57106187443675',
-        'Shopping Mall': 'https://www.google.com/maps/dir/?api=1&destination=40.280576078445456,-74.5711618360557',
-        'Credit Union': 'https://www.google.com/maps/dir/?api=1&destination=40.2821947507117,-74.56736818534861'
-    };
-
-    const status = statusStyles[statusText] || statusStyles['Available']; // Fallback to 'Available' if status is not recognized
-    const directionsUrl = directionsUrls[parkingLot];
-
-    if (parkingLots[parkingLot]) {
-        const polygon = parkingLots[parkingLot];
-        polygon.setStyle({
-            color: status.color,
-            fillColor: status.fillColor,
-            weight: 2,
-            opacity: 0.9,
-            fillOpacity: 0.5
-        }); // Update polygon style based on status
-
-        // Update the popup content to include both the status and the directions URL
-        const popupContent = `<strong>${parkingLot}</strong><br>${statusText}<br><a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" class="strong-blue-link">Get Directions</a>`;
-        polygon.bindPopup(popupContent).openPopup(); // Update popup content
-    }
-    // Update progress bar for each parking lot
-    updateProgressBar(parkingLot.replace(/\s+/g, '-').toLowerCase(), statusText);
-});
-}
-
-fetchParkingLotStatuses(); // Call the function to fetch and update statuses
-
-// Optionally, set an interval to regularly update statuses
-setInterval(fetchParkingLotStatuses, 300000); // Every 5 minutes
  
 
+const scriptSrcs = [
+  "https://code.jquery.com/jquery-3.6.0.min.js",
+  "https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js",
+  "https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+];
+
+scriptSrcs.forEach(src => {
+  const script = document.createElement('script');
+  script.src = `${src}?ver=${new Date().getTime()}`;
+  document.head.appendChild(script);
+});
+
+  fetchAndUpdateParkingLotStatuses();
+  setInterval(fetchAndUpdateParkingLotStatuses, 300000); // Update every 5 minutes
 </script>
-</body>
+
 </html>
